@@ -7,7 +7,7 @@ const constructorMethod = (app) => {
     app.use("/message", messagesRoutes);
 
     app.use("*", (req, res) => {
-        res.sendFile(path.resolve("server", "public", "html", "index.html"));
+        res.status(404).send({ "success": false, "message": "Not found" });
     });
 };
 

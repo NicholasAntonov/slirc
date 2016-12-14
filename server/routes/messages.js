@@ -3,7 +3,7 @@ const router = express.Router();
 
 // Capture any other uncoded routes and 404 them
 router.use("*", (req, res) => {
-    res.sendStatus(404);
+    res.status(404).send({ "success": false, "message": "Not found" });
 });
 
 module.exports = router;
