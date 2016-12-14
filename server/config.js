@@ -7,6 +7,5 @@ exports.mongoConfig = {
 
 exports.serverConfig = {
     port: 8080, // TODO: Use this in server.js
-    sessionSecret: "somesupersecretkey", // Used for generating auth tokens
-    salt: "somesupersecretsalt" // Salt for the passwords
+    sessionSecret: "somesupersecretkey" // Used for generating auth tokens
 }

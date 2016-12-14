@@ -3,7 +3,8 @@ var MongoClient = require('mongodb').MongoClient,
     uuid = require('uuid'),
     redis = require('promise-redis')(),
     redisClient = redis.createClient(),
-    bcrypt = require("bcrypt-nodejs");
+    bcrypt = require("bcrypt-nodejs"),
+    xss = require("xss");
 
 var fullMongoUrl = settings.mongoConfig.serverUrl + settings.mongoConfig.database;
 var exports = module.exports = {};
@@ -19,9 +20,9 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                 return Promise.reject("Invalid parameters");
             }
 
-            username = username.trim();
+            username = xss(username.trim());
             password = password.trim();
-            bio = !bio || !bio.trim() ? null : bio.trim();
+            bio = !bio || !bio.trim() ? null : xss(bio.trim());
 
             if (!username || !password) {
                 return Promise.reject("Invalid parameters");
@@ -92,6 +93,80 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                     }
 
                     return user;
+                });
+            })
+        }
+
+        /**
+         * Get a user by ID
+         */
+        exports.getUserByID = (id) => {
+            return redisClient.get(id).then((user) => {
+                if (user) {
+                    return JSON.parse(user);
+                }
+
+                return userCollection.findOne({ _id: id }).then((foundUser) => {
+                    user = foundUser ? foundUser : null;
+
+                    if (user) {
+                        redisClient.set(username, JSON.stringify(user));
+                        redisClient.set(user._id, JSON.stringify(user));
+                    }
+
+                    return user;
+                });
+            })
+        }
+
+        /**
+         * Update a user
+         */
+        exports.updateUser = (id, username, password, bio) => {
+            return exports.getUserByID(id).then((oldUser) => {
+                let updateSet = {};
+
+                if (!oldUser) {
+                    return Promise.reject("Invalid user ID");
+                }
+
+                username = username ? xss(username.trim()) : oldUser.username;
+
+                return exports.getUserByUsername(username).then((user) => {
+                    if (user && username != oldUser.username) {
+                        return Promise.reject("New username is already in use");
+                    } else {
+                        username = username ? username : oldUser.username;
+                    }
+
+                    if (password && (password = password.trim())) {
+                        let salt = bcrypt.genSaltSync();
+                        password = bcrypt.hashSync(password, salt);
+                    } else {
+                        password = oldUser.password;
+                    }
+
+                    if (bio && (bio = bio.trim())) {
+                        bio = xss(bio);
+                    } else {
+                        bio = oldUser.bio;
+                    }
+
+                    let updateSet = {
+                        _id: id,
+                        username: username,
+                        password: password,
+                        bio: bio,
+                        sessionID: null
+                    };
+
+                    return userCollection.update({ _id: id }, updateSet).then(() => {
+                        return redisClient.set(id, JSON.stringify(updateSet));
+                    }).then(() => {
+                        return (username == oldUser.username) ? 1 : redisClient.del(oldUser.username);
+                    }).then(() => {
+                        return redisClient.set(username, JSON.stringify(updateSet));
+                    });
                 });
             })
         }

@@ -52,6 +52,12 @@ bytes@2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/bytes/-/bytes-2.4.0.tgz#7d97196f9d5baf7f6935e25985549edd2a6c2339"
 
+commander@^2.9.0:
+  version "2.9.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-2.9.0.tgz#9c99094176e12240cb22d6c5146098400fe0f7d4"
+  dependencies:
+    graceful-readlink ">= 1.0.0"
+
 content-disposition@0.5.1:
   version "0.5.1"
   resolved "https://registry.yarnpkg.com/content-disposition/-/content-disposition-0.5.1.tgz#87476c6a67c8daa87e32e87616df883ba7fb071b"
@@ -71,6 +77,10 @@ cookie@0.3.1:
 core-util-is@~1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
+
+cssfilter@^0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/cssfilter/-/cssfilter-0.0.8.tgz#6564caccba8a76dd9b4b920668b9fb7fda50e54c"
 
 debug@~2.2.0:
   version "2.2.0"
@@ -165,6 +175,10 @@ forwarded@~0.1.0:
 fresh@0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/fresh/-/fresh-0.3.0.tgz#651f838e22424e7566de161d8358caa199f83d4f"
+
+"graceful-readlink@>= 1.0.0":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/graceful-readlink/-/graceful-readlink-1.0.1.tgz#4cafad76bc62f02fa039b2f94e9a3dd3a391a725"
 
 hoek@2.x.x:
   version "2.16.3"
@@ -457,6 +471,13 @@ uuid@^3.0.1:
 vary@~1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.0.tgz#e1e5affbbd16ae768dd2674394b9ad3022653140"
+
+xss@^0.3.2:
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/xss/-/xss-0.3.2.tgz#4b9c97e4479fc7b361f4683fffe8bc458cb9d98e"
+  dependencies:
+    commander "^2.9.0"
+    cssfilter "^0.0.8"
 
 xtend@^4.0.1:
   version "4.0.1"

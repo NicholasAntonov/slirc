@@ -52,8 +52,24 @@ router.post("/logout", auth.verifyRequest(), (req, res) => {
     });
 });
 
+router.get("/:username", auth.verifyRequest(), (req, res) => {
+    userData.getUserByUsername(req.params.username).then((user) => {
+        if (user == null) {
+            return Promise.reject("Invalid username");
+        }
+        let bio = user.bio ? user.bio : "";
+        res.json({ bio: bio });
+    }).catch((err) => {
+        res.json({ success: false, message: err });
+    })
+});
+
 router.put("/", auth.verifyRequest(), (req, res) => {
-    
+    userData.updateUser(res.locals.user._id, req.body.username, req.body.password, req.body.bio).then(() => {
+        res.json({ success: true, message: "Profile successfully updated. Please login again" });
+    }).catch((err) => {
+        res.json({ success: false, message: err });
+    });
 });
 
 router.delete("/", auth.verifyRequest(), (req, res) => {

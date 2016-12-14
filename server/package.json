@@ -20,7 +20,8 @@
     "jsonwebtoken": "^7.2.1",
     "mongodb": "^2.2.16",
     "promise-redis": "^0.0.5",
-    "uuid": "^3.0.1"
+    "uuid": "^3.0.1",
+    "xss": "^0.3.2"
   },
   "repository": {}
 }
