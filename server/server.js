@@ -1,19 +1,21 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
-const path = require("path");
-
-const appStatic = express.static(path.resolve("app"));
-const generalStatic = express.static(path.resolve("server", "public"));
-const nodeModuleStatic = express.static(path.resolve("node_modules"));
 
 const configRoutes = require("./routes");
 
-app.use("/public/js/node_modules", nodeModuleStatic);
-app.use("/public", generalStatic);
-app.use("/app", appStatic);
+const rewriteUnsupportedBrowserMethods = (req, res, next) => {
+    if (req.body && req.body._method) {
+        req.method = req.body._method;
+        delete req.body._method;
+    }
+
+    next();
+};
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(rewriteUnsupportedBrowserMethods);
 
 configRoutes(app);
 

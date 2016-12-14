@@ -1,14 +1,16 @@
 var exports = module.exports = {};
 const jwt = require("jsonwebtoken");
 const settings = require('../config.js');
+const userData = require('../data/users.js');
 
 exports.verifyToken = (req) => {
     let token = req.get('Auth-Token');
     let decoded = undefined;
 
     try {
-        decoded = jwt.verify(token, settings.sessionSecret);
+        decoded = jwt.verify(token, settings.serverConfig.sessionSecret);
     } catch (e) {
+        console.log(e);
         return false;
     }
 
