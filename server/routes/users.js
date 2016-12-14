@@ -65,7 +65,7 @@ router.get("/:username", auth.verifyRequest(), (req, res) => {
 });
 
 router.put("/", auth.verifyRequest(), (req, res) => {
-    userData.updateUser(res.locals.user._id, req.body.username, req.body.password, req.body.bio).then(() => {
+    userData.updateUser(res.locals.user.id, req.body.username, req.body.password, req.body.bio).then(() => {
         res.json({ success: true, message: "Profile successfully updated. Please login again" });
     }).catch((err) => {
         res.json({ success: false, message: err });

@@ -1,4 +1,4 @@
-var MongoClient = require('mongodb').MongoClient,
+var rethink = require('rethinkdb'),
     settings = require('../config.js'),
     uuid = require('uuid'),
     redis = require('promise-redis')(),
@@ -6,11 +6,10 @@ var MongoClient = require('mongodb').MongoClient,
     bcrypt = require("bcrypt-nodejs"),
     xss = require("xss");
 
-var fullMongoUrl = settings.mongoConfig.serverUrl + settings.mongoConfig.database;
 var exports = module.exports = {};
 
-MongoClient.connect(fullMongoUrl).then(function(db) {
-        var userCollection = db.collection("users");
+rethink.connect(settings.rethink).then((db) => {
+        var userCollection = rethink.table("users");
 
         /**
          * Create a user
@@ -29,21 +28,24 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
             }
 
             return exports.getUserByUsername(username).then((user) => {
+                console.log(user);
                 if (user) {
                     return Promise.reject("User already exists");
                 }
 
                 let salt = bcrypt.genSaltSync();
                 let userObject = {
-                    _id: uuid.v4(),
+                    id: uuid.v4(),
                     username: username,
                     password: bcrypt.hashSync(password, salt),
                     bio: bio,
                     sessionID: null
                 }
 
-                return userCollection.insertOne(userObject).then((res) => {
+                return userCollection.insert(userObject).run(db).then((res) => {
                     return res;
+                }).error((err) => {
+                    console.log(err);
                 });
             })
         }
@@ -58,12 +60,12 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
 
             return exports.getUserByUsername(username).then((foundUser) => {
                 if (foundUser && bcrypt.compareSync(password, foundUser.password)) {
-                    let user = foundUser;
+                    var user = foundUser;
 
-                    return userCollection.update({ username: username }, { $set: { sessionID: token }}).then(() => {
+                    return userCollection.filter({ username: username }).update({ sessionID: token }).run(db).then(() => {
                         user.sessionID = token;
         
-                        return redisClient.set(user._id, JSON.stringify(user)).then(() => {
+                        return redisClient.set(user.id, JSON.stringify(user)).then(() => {
                             return redisClient.set(user.username, JSON.stringify(user));
                         }).then(() => {
                             return token;
@@ -84,12 +86,14 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                     return JSON.parse(user);
                 }
 
-                return userCollection.findOne({ username: username }).then((foundUser) => {
-                    user = foundUser ? foundUser : null;
+                return userCollection.filter({ username: username }).limit(1).run(db).then((foundUser) => {
+                    return foundUser.toArray();
+                }).then((foundUser) => {
+                    user = foundUser[0] ? foundUser[0] : null;
 
                     if (user) {
                         redisClient.set(username, JSON.stringify(user));
-                        redisClient.set(user._id, JSON.stringify(user));
+                        redisClient.set(user.id, JSON.stringify(user));
                     }
 
                     return user;
@@ -106,12 +110,12 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                     return JSON.parse(user);
                 }
 
-                return userCollection.findOne({ _id: id }).then((foundUser) => {
+                return userCollection.get(id).then((foundUser) => {
                     user = foundUser ? foundUser : null;
 
                     if (user) {
                         redisClient.set(username, JSON.stringify(user));
-                        redisClient.set(user._id, JSON.stringify(user));
+                        redisClient.set(user.id, JSON.stringify(user));
                     }
 
                     return user;
@@ -153,14 +157,14 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                     }
 
                     let updateSet = {
-                        _id: id,
+                        id: id,
                         username: username,
                         password: password,
                         bio: bio,
                         sessionID: null
                     };
 
-                    return userCollection.update({ _id: id }, updateSet).then(() => {
+                    return userCollection.get(id).update(updateSet).run(db).then(() => {
                         return redisClient.set(id, JSON.stringify(updateSet));
                     }).then(() => {
                         return (username == oldUser.username) ? 1 : redisClient.del(oldUser.username);
@@ -177,8 +181,8 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
         exports.logout = (username) => {
             return exports.getUserByUsername(username).then((user) => {
                 redisClient.del(username);
-                redisClient.del(user._id);
-                return userCollection.update({ username: username }, { $set: { sessionID: null }});
+                redisClient.del(user.id);
+                return userCollection.filter({ username: username }).update({ sessionID: null }).run(db);
             });
         }
 
@@ -188,8 +192,8 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
         exports.delete = (username) => {
             return exports.getUserByUsername(username).then((user) => {
                 redisClient.del(username);
-                redisClient.del(user._id);
-                return userCollection.deleteOne({ username: username });
+                redisClient.del(user.id);
+                return userCollection.filter({ username: username }).delete().run(db);
             });
         }
     });

@@ -1,6 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
+const rethink = require("rethinkdb");
+const config = require("./config.js");
 
 const configRoutes = require("./routes");
 
@@ -19,7 +21,41 @@ app.use(rewriteUnsupportedBrowserMethods);
 
 configRoutes(app);
 
-app.listen(3000, () => {
-    console.log("We've now got a server!");
-    console.log("Your routes will be running on http://localhost:3000");
+start = () => {
+    app.listen(3000, () => {
+        console.log("We've now got a server!");
+        console.log("Your routes will be running on http://localhost:3000");
+    }); 
+}
+
+// Configure rethink
+rethink.connect(config.rethink, (err, conn) => {
+    if (err) {
+        console.log("Unable to connect to rethink");
+        process.exit(1);
+    }
+
+    rethink.table("users").run(conn).then((err, result) => {
+        console.log("Database already setup. Starting express...");
+        start();
+    }).error((err) => {
+        console.log("Database not setup. Configuring database...");
+        rethink.dbCreate(config.rethink.db).run(conn).finally(() => {
+            return rethink.tableCreate("users").run(conn);
+        }).then(() => {
+            console.log("Database setup. Starting express...");
+            start();
+            conn.close();
+        }).error((err) => {
+            if (err) {
+                console.log("An error occured:");
+                console.log(err);
+                process.exit(1);
+            }
+
+            console.log("Database already setup. Starting express...");
+            start();
+            conn.close();
+        });
+    });
 });
