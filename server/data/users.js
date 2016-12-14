@@ -14,13 +14,14 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
         /**
          * Create a user
          */
-        exports.createUser = (username, password) => {
+        exports.createUser = (username, password, bio) => {
             if (!username || !password) {
                 return Promise.reject("Invalid parameters");
             }
 
             username = username.trim();
             password = password.trim();
+            bio = !bio || !bio.trim() ? null : bio.trim();
 
             if (!username || !password) {
                 return Promise.reject("Invalid parameters");
@@ -36,6 +37,7 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                     _id: uuid.v4(),
                     username: username,
                     password: bcrypt.hashSync(password, salt),
+                    bio: bio,
                     sessionID: null
                 }
 
@@ -102,6 +104,17 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                 redisClient.del(username);
                 redisClient.del(user._id);
                 return userCollection.update({ username: username }, { $set: { sessionID: null }});
+            });
+        }
+
+        /**
+         * Delete a user
+         */
+        exports.delete = (username) => {
+            return exports.getUserByUsername(username).then((user) => {
+                redisClient.del(username);
+                redisClient.del(user._id);
+                return userCollection.deleteOne({ username: username });
             });
         }
     });

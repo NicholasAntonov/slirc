@@ -10,7 +10,6 @@ exports.verifyToken = (req) => {
     try {
         decoded = jwt.verify(token, settings.serverConfig.sessionSecret);
     } catch (e) {
-        console.log(e);
         return false;
     }
 

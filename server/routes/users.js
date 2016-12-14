@@ -8,8 +8,9 @@ const settings = require('../config.js');
 router.post("/create", (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
+    let bio = req.body.bio;
 
-    userData.createUser(username, password).then((data) => {
+    userData.createUser(username, password, bio).then((data) => {
         res.json({ success: true, message: "User created" })
     }).catch((err) => {
         res.json({ success: false, message: err });
@@ -35,7 +36,6 @@ router.post("/login", (req, res) => {
         
         return jwt.sign({ sub: user.username }, settings.serverConfig.sessionSecret);
     }).then((token) => {
-        console.log(token);
         return userData.authenticateUser(username, password, token);
     }).then((token) => {
         res.json({ success: true, token: token });
@@ -52,12 +52,16 @@ router.post("/logout", auth.verifyRequest(), (req, res) => {
     });
 });
 
-router.put("/:id", auth.verifyRequest(), (req, res) => {
-
+router.put("/", auth.verifyRequest(), (req, res) => {
+    
 });
 
-router.delete("/:id", auth.verifyRequest(), (req, res) => {
-
+router.delete("/", auth.verifyRequest(), (req, res) => {
+    userData.delete(res.locals.user.username).then(() => {
+        res.json({ success: true, message: "User deleted" });
+    }).catch((err) => {
+        res.json({ success: false, message: err });
+    });
 });
 
 // Capture any other uncoded routes and 404 them
