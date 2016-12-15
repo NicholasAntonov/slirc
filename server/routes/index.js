@@ -1,5 +1,4 @@
 const userRoutes = require("./users");
-const messageRoutes = require("./messages");
 const path = require("path");
 
 const constructorMethod = (app) => {
