@@ -7,6 +7,6 @@ exports.rethink = {
 };
 
 exports.serverConfig = {
-    port: 3000, // TODO: Use this in server.js
+    port: 3000, 
     sessionSecret: "somesupersecretkey" // Used for generating auth tokens
 }
