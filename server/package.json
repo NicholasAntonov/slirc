@@ -1,0 +1,30 @@
+{
+  "name": "slirc-server",
+  "version": "1.0.0",
+  "description": "The server component of slirc",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "Jason Ajmo, Daniel Vinakovsky",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/NicholasAntonov/slirc"
+    }
+  ],
+  "dependencies": {
+    "bcrypt-nodejs": "^0.0.3",
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "jsonwebtoken": "^7.2.1",
+    "promise-redis": "^0.0.5",
+    "rethinkdb": "^2.3.3",
+    "socket.io-client": "^1.7.2",
+    "socketio": "^1.0.0",
+    "socketio-jwt": "^4.5.0",
+    "uuid": "^3.0.1",
+    "xss": "^0.3.2"
+  },
+  "repository": {}
+}
