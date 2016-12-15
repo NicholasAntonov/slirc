@@ -20,7 +20,7 @@ rethink.connect(settings.rethink).then((db) => {
             }
 
             username = xss(username.trim());
-            password = password.trim();
+            password = password;
             bio = !bio || !bio.trim() ? null : xss(bio.trim());
 
             if (!username || !password) {
@@ -143,7 +143,7 @@ rethink.connect(settings.rethink).then((db) => {
                         username = username ? username : oldUser.username;
                     }
 
-                    if (password && (password = password.trim())) {
+                    if (password) {
                         let salt = bcrypt.genSaltSync();
                         password = bcrypt.hashSync(password, salt);
                     } else {

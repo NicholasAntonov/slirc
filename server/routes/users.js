@@ -27,7 +27,7 @@ router.post("/login", (req, res) => {
     }
 
     username = username.trim();
-    password = password.trim();
+    password = password;
 
     userData.getUserByUsername(username).then((user) => {
         if (!user) {
