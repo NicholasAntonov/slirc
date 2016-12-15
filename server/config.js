@@ -7,6 +7,6 @@ exports.rethink = {
 };
 
 exports.serverConfig = {
-    port: 3000, // What port should express listen on?
+    port: 4000, // What port should express listen on?
     sessionSecret: "somesupersecretkey" // Used for generating auth tokens. Should be something secure
 }
