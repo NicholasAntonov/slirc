@@ -7,7 +7,7 @@ class NotFoundPage extends Component {
       <div>
         <h1>404 - Page Not Found</h1>
         <p>I'm sorry, the page you were looking for cannot be found!</p>
-        <Link to="/dashboard">to Dashboard</Link>
+        <Link to="/">to Dashboard</Link>
       </div>
     )
   }

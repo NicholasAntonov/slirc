@@ -6,7 +6,9 @@ import * as AuthActions from '../actions/auth';
 
 function mapStateToProps(state) {
   return {
-    content: state.auth.content
+    content: state.auth.content,
+    token: state.auth.token,
+    user: state.auth.user
   };
 }
 

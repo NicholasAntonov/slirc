@@ -29,22 +29,25 @@ class Register extends Component {
     const { handleSubmit } = this.props;
 
     return (
-      <form onSubmit={handleSubmit(this.handleFormSubmit.bind(this))}>
-      {this.renderAlert()}
-      <div className="row">
-        <div className="col-md-6">
-          <label>Username</label>
-          <Field name="username" className="form-control" component={renderField} type="text" />
-        </div>
-        </div>
+      <div>
+        <form onSubmit={handleSubmit(this.handleFormSubmit.bind(this))}>
+        {this.renderAlert()}
         <div className="row">
-          <div className="col-md-12">
-            <label>Password</label>
-            <Field name="password" className="form-control" component={renderField} type="password" />
+          <div className="col-md-6">
+            <label>Username</label>
+            <Field name="username" className="form-control" component={renderField} type="text" />
           </div>
-        </div>
-        <button type="submit" className="btn btn-primary">Register</button>
-      </form>
+          </div>
+          <div className="row">
+            <div className="col-md-12">
+              <label>Password</label>
+              <Field name="password" className="form-control" component={renderField} type="password" />
+            </div>
+          </div>
+          <button type="submit" className="btn btn-primary">Register</button>
+        </form>
+        <Link to="/login">Login</Link>
+      </div>
     );
   }
 }
