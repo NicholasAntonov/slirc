@@ -1,0 +1,30 @@
+/* The side channel menu */
+.channels {
+    height: 100%;
+    width: 250px;
+    display: inline-block;
+    z-index: 1;
+    background-color: #111;
+    overflow-x: hidden;
+    float: left;
+    padding-bottom:25px;
+}
+
+.channels h3 {
+    text-align:center;
+
+}
+
+.channels li{
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 16px;
+    color: #818181;
+    display: block;
+    transition: 0.3s
+}
+
+
+.channels li:hover {
+    color: #f1f1f1;
+}
