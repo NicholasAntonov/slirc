@@ -35,6 +35,10 @@ const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ?
 /* eslint-enable no-underscore-dangle */
 
 const socket = io.connect('http://localhost:4000/chatns');
+console.log(socket);
+socket.on('connect', function () {
+  console.log('connect');
+});
 const socketIoMiddleware = createSocketIoMiddleware(socket, '', {execute: socketExecutor});
 
 const enhancer = composeEnhancers(
@@ -43,11 +47,10 @@ const enhancer = composeEnhancers(
 
 function socketExecutor (action, emit, next, dispatch) {
   console.log('executing');
-  emit('authenticate', {token: store.getState().auth.token})
-    .on('authenticated', function () {
-      console.log('authed');
-      emit('action', action);
-    });
+  emit('action', {
+    token: store.getState().auth.token,
+    ...action
+  });
   next(action);
 }
 
