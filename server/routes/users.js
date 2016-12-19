@@ -30,7 +30,7 @@ router.post("/login", (req, res) => {
         if (!user) {
             return Promise.reject("Invalid username or password");
         }
-        
+
         return jwt.sign({ sub: user.username }, settings.serverConfig.sessionSecret);
     }).then((token) => {
         return userData.authenticateUser(username, password, token);

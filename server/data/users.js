@@ -62,7 +62,7 @@ rethink.connect(settings.rethink).then((db) => {
 
                     return userCollection.filter({ username: username }).update({ sessionID: token }).run(db).then(() => {
                         user.sessionID = token;
-        
+
                         return redisClient.set(user.id, JSON.stringify(user)).then(() => {
                             return redisClient.set(user.username, JSON.stringify(user));
                         }).then(() => {
