@@ -1,19 +1,24 @@
 const socketioJwt = require('socketio-jwt');
 const settings = require('../config.js');
-const xss = require("xss");
+const xss = require('xss');
 
 const constructorMethod = (io) => {
 
     // we'll use the '/chatns' namespace
     const chatns = io.of('/chatns');
+    
     const userSocketMap = {};
     const channelUsers = {};
     const userChannels = {};
+    let username = undefined;
     
     /* supported user commands */
     
-    const join_channel = (channelName) => {
-        io.to(channelName).emit('user-join', username);
+    const join_channel = (socket, channelName) => {
+        io.to(channelName).emit('action', {
+            type: 'user-join',
+            username: username
+        });
         socket.join(channelName);
         if (channelUsers[channelName] === undefined) {
             channelUsers[channelName] = new Set();
@@ -23,29 +28,34 @@ const constructorMethod = (io) => {
         }
         channelUsers[channelName].add(username);
         userChannels[username].add(channelName);
-        console.log(`${username} has joined channel ${channelName}`);
-    }
+        // console.log(`${username} has joined channel ${channelName}`);
+    };
     
-    const leave_channel = (channelName) => {
-        io.to(channelName).emit('user-leave', username);
+    const leave_channel = (socket, channelName) => {
+        io.to(channelName).emit('action', {
+            type: 'user-leave',
+            username: username
+        });
         socket.leave(channelName);
         /* update list of channel users */
         channelUsers[channelName].delete(username);
         userChannels[username].delete(channelName);
-        console.log(`${username} has left channel ${channelName}`);
-    }
+        // console.log(`${username} has left channel ${channelName}`);
+    };
 
     const send_msg = (msg) => {
-        io.to(msg.channelName).emit('new-msg', {
+        io.to(msg.channelName).emit('action', {
+            type: 'new-msg',
             from: username,
             text: xss(msg.text),
             ts: new Date().valueOf()
         });
-    }
+    };
 
     const private_msg = (msg) => {
         if (userSocketMap[msg.to] !== undefined) {
-            userSocketMap[msg.to].emit('pm', {
+            userSocketMap[msg.to].emit('action', {
+                type: 'pm',
                 from: username,
                 text: xss(msg.text),
                 ts: new Date().valueOf()
@@ -55,28 +65,31 @@ const constructorMethod = (io) => {
                 error: 'No such user currently online'
             });
         }
-    }
+    };
 
     /* used by portions of frontend */
     
     const user_list = (channelName) => {
-        io.to(userSocketMap[username]).emit('channel-users', {
+        io.to(userSocketMap[username]).emit('action', {
+            type: 'channel-users',
             channel: channelName,
             users: Array.from(channelUsers[channelName])
         });
-    }
+    };
     
     const channel_list = () => {
-        io.to(userSocketMap[username]).emit('channels', {
+        io.to(userSocketMap[username]).emit('action', {
+            type: 'channel-list',
             channels: Object.keys(channelUsers)
         });
-    }
+    };
     
     const joined_channels = () => {
-        io.to(userSocketMap[username]).emit('your-channels', {
+        io.to(userSocketMap[username]).emit('action', {
+            type: 'joined-channels',
             channels: userChannels[username]
         });
-    }    
+    };   
 
     /* client should do something like:
         var socket = io.connect('http://localhost:3000/chatns', {
@@ -95,17 +108,17 @@ const constructorMethod = (io) => {
     // on each new connection from a websocket client
     chatns.on('connection', (socket) => {
 
-        let username = xss(socket.decoded_token.sub);
+        username = xss(socket.decoded_token.sub);
 
-        console.log(`${username} has authenticated.`);
+        // console.log(`${username} has authenticated.`);
 
         socket.on('action', (action) => {
             let type = action.type;
             
             if (type === 'join-channel') {
-                join_channel(action.data.channelName);
+                join_channel(socket, action.data.channelName);
             } else if (type === 'leave-channel') {
-                leave_channel(action.data.channelName);
+                leave_channel(socket, action.data.channelName);
             } else if (type === 'send-msg') {
                 send_msg(action.data.msg);
             } else if (type === 'private-msg') {
@@ -125,7 +138,7 @@ const constructorMethod = (io) => {
 
         socket.on('init', () => {
             userSocketMap[username] = socket;
-            console.log(`Created user:socket mapping for ${username}`);
+            // console.log(`Created user:socket mapping for ${username}`);
         });
 
         socket.on('disconnect', () => {
@@ -135,7 +148,7 @@ const constructorMethod = (io) => {
             });
             // userChannels[username].clear();
             userChannels[username] = undefined;
-            console.log(`${username} has disconnected`);
+            // console.log(`${username} has disconnected`);
         });
 
     });
