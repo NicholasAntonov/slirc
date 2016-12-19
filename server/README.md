@@ -12,7 +12,7 @@ Technologies used
 
 Usage
 -----
-* Install and run [rethinkdb](https://rethinkdb.com/), and install [yarn](https://yarnpkg.com/).
+* Install and run [rethinkdb](https://rethinkdb.com/), install and run [redis](https://redis.io/), and install [yarn](https://yarnpkg.com/).
 * Run `yarn install`.
 * Edit `config.js` to your liking.
 * Run `yarn start`. The server will automatically setup the tables in the database, and will start running on `localhost:PORT` as defined in `config.js`.
