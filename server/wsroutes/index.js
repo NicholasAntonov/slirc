@@ -100,18 +100,21 @@ const constructorMethod = (io) => {
     */
 
     // auth middleware
-    chatns.use(socketioJwt.authorize({
+    /* chatns.use(socketioJwt.authorize({
         secret: settings.serverConfig.sessionSecret,
         handshake: true
     }));
+    */
 
     // on each new connection from a websocket client
-    chatns.on('connection', (socket) => {
+    chatns.on('connection', socketioJwt.authorize({
+        secret: settings.serverConfig.sessionSecret
+    })).on('authenticated', (socket) => {
 
         username = xss(socket.decoded_token.sub);
 
         // console.log(`${username} has authenticated.`);
-
+        
         socket.on('action', (action) => {
             let type = action.type;
             
