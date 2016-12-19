@@ -2,12 +2,17 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router';
 import styles from './Dashboard.css';
+import Chat from '../components/Chat';
+import Channellist from '../components/Channellist';
+
 
 class Dashboard extends Component {
  constructor(props) {
     super(props);
     // this.props.protectedTest({user: this.props.user, token: this.props.token});
   }
+
+
 
   renderContent() {
     if(this.props.user) {
@@ -24,12 +29,15 @@ class Dashboard extends Component {
   render() {
     return (
       <div>
-        <h1>This is the dashboard after logging in</h1>
+        <h1>Welcome, {this.props.user}</h1>
+        <p> Select the channel you would like to talk in, send a message, or logout </p>
+        <div className={styles.logoutButton}>
+          <button  onClick={(e) => this.logout(e)}>Logout</button>
+        </div>
         <aside>
-          <button onClick={(e) => this.logout(e)}>Logout</button>
-          Channel list
+          <Channellist />
         </aside>
-        <main>Chat</main>
+        <main><Chat/></main>
       </div>
     );
   }

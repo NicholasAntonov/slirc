@@ -1,0 +1,23 @@
+main {
+    width: 60%;
+    display: inline-block;
+    background-color: #111;
+    margin-left: 6px;
+    min-width: 250px;
+}
+
+h1 {
+    padding-top: 20px;
+}
+
+.logoutButton {
+    display:block;
+    margin-bottom:6px;
+}
+
+@media only screen and (max-width: 640px) {
+    main {
+        margin-left: 0px;
+        margin-top: 6px;
+    }
+}

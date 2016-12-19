@@ -1,0 +1,17 @@
+.messageText {
+    overflow: hidden;
+}
+
+.messageText input {
+    padding: 8px;
+    width: 100%;
+}
+
+h1 {
+    padding: 0px 0px 0px 12px;
+}
+
+.messageText .sendButton {
+    margin: 8px;
+}
+
