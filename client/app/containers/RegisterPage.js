@@ -1,16 +1,16 @@
 // @flow
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import Register from '../components/Register';
+import Register from '../components/register';
 import * as RegisterActions from '../actions/auth';
-import { reduxForm } from 'redux-form';  
+import { reduxForm } from 'redux-form';
 
-const form = reduxForm({  
+const form = reduxForm({
   form: 'register',
   validate
 });
 
-function validate(formProps) {  
+function validate(formProps) {
   const errors = {};
 
   if (!formProps.username) {

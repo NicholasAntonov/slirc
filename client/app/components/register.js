@@ -1,16 +1,16 @@
-import React, { Component } from 'react';  
+import React, { Component } from 'react';
 import { Link } from 'react-router';
-import { Field } from 'redux-form';  
-import styles from './Register.css';
+import { Field } from 'redux-form';
+import styles from './register.css';
 
-const renderField = field => (  
+const renderField = field => (
     <div>
       <input className="form-control" {...field.input}/>
       {field.touched && field.error && <div className="error">{field.error}</div>}
     </div>
 );
 
-class Register extends Component {  
+class Register extends Component {
   handleFormSubmit(formProps) {
     this.props.registerUser(formProps);
   }
