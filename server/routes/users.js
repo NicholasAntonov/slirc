@@ -6,33 +6,31 @@ const jwt = require('jsonwebtoken');
 const settings = require('../config.js');
 
 router.post("/create", (req, res) => {
-    let username = req.body.username;
-    let password = req.body.password;
-    let bio = req.body.bio;
+    const username = req.body.username;
+    const password = req.body.password;
+    const bio = req.body.bio;
 
     userData.createUser(username, password, bio).then((data) => {
-        res.json({ success: true, message: "User created" })
+        res.json({ success: true, message: "User created" });
     }).catch((err) => {
         res.json({ success: false, message: err });
     });
 });
 
 router.post("/login", (req, res) => {
-    let username = req.body.username;
     const password = req.body.password;
+    const username = req.body.username ? req.body.username.trim() : null;
 
     if (!username || !password) {
         res.json({ success: false, message: "Invalid parameters" });
         return;
     }
 
-    username = username.trim();
-
     userData.getUserByUsername(username).then((user) => {
         if (!user) {
             return Promise.reject("Invalid username or password");
         }
-        
+
         return jwt.sign({ sub: user.username }, settings.serverConfig.sessionSecret);
     }).then((token) => {
         return userData.authenticateUser(username, password, token);
@@ -53,18 +51,22 @@ router.post("/logout", auth.verifyRequest(), (req, res) => {
 
 router.get("/:username", auth.verifyRequest(), (req, res) => {
     userData.getUserByUsername(req.params.username).then((user) => {
-        if (user == null) {
+        if (user === null) {
             return Promise.reject("Invalid username");
         }
         let bio = user.bio ? user.bio : "";
         res.json({ bio: bio });
     }).catch((err) => {
         res.json({ success: false, message: err });
-    })
+    });
 });
 
 router.put("/", auth.verifyRequest(), (req, res) => {
-    userData.updateUser(res.locals.user.id, req.body.username, req.body.password, req.body.bio).then(() => {
+    const username = req.body.username ? req.body.username.trim() : null;
+    const password = req.body.password ? req.body.password : null;
+    const bio = req.body.bio ? req.body.bio : null;
+
+    userData.updateUser(res.locals.user.id, username, password, bio).then(() => {
         res.json({ success: true, message: "Profile successfully updated. Please login again" });
     }).catch((err) => {
         res.json({ success: false, message: err });

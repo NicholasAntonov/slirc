@@ -1,11 +1,10 @@
-var rethink = require('rethinkdb'),
-    settings = require('../config.js'),
-    uuid = require('uuid'),
-    redis = require('promise-redis')(),
-    redisClient = redis.createClient(),
-    bcrypt = require("bcrypt-nodejs"),
-    xss = require("xss");
-
+const rethink = require('rethinkdb');
+const settings = require('../config.js');
+const uuid = require('uuid');
+const redis = require('promise-redis')();
+const redisClient = redis.createClient();
+const bcrypt = require("bcrypt-nodejs");
+const xss = require("xss");
 var exports = module.exports = {};
 
 rethink.connect(settings.rethink).then((db) => {
@@ -20,35 +19,33 @@ rethink.connect(settings.rethink).then((db) => {
             }
 
             username = xss(username.trim());
-            password = password;
             bio = !bio || !bio.trim() ? null : xss(bio.trim());
 
-            if (!username || !password) {
+            if (!username) {
                 return Promise.reject("Invalid parameters");
             }
 
             return exports.getUserByUsername(username).then((user) => {
-                console.log(user);
                 if (user) {
                     return Promise.reject("User already exists");
                 }
 
-                let salt = bcrypt.genSaltSync();
-                let userObject = {
+                const salt = bcrypt.genSaltSync();
+                const userObject = {
                     id: uuid.v4(),
                     username: username,
                     password: bcrypt.hashSync(password, salt),
                     bio: bio,
                     sessionID: null
-                }
+                };
 
                 return userCollection.insert(userObject).run(db).then((res) => {
                     return res;
-                }).error((err) => {
-                    console.log(err);
+                }).catch((err) => {
+                    return Promise.reject("A database error occured");
                 });
-            })
-        }
+            });
+        };
 
         /**
          * Authenticate a user
@@ -64,7 +61,7 @@ rethink.connect(settings.rethink).then((db) => {
 
                     return userCollection.filter({ username: username }).update({ sessionID: token }).run(db).then(() => {
                         user.sessionID = token;
-        
+
                         return redisClient.set(user.id, JSON.stringify(user)).then(() => {
                             return redisClient.set(user.username, JSON.stringify(user));
                         }).then(() => {
@@ -75,7 +72,7 @@ rethink.connect(settings.rethink).then((db) => {
                     return Promise.reject("Invalid username or password");
                 }
             });
-        }
+        };
 
         /**
          * Get a user by username
@@ -97,9 +94,11 @@ rethink.connect(settings.rethink).then((db) => {
                     }
 
                     return user;
+                }).catch((err) => {
+                    return Promise.reject("A database error occured");
                 });
-            })
-        }
+            });
+        };
 
         /**
          * Get a user by ID
@@ -114,22 +113,22 @@ rethink.connect(settings.rethink).then((db) => {
                     user = foundUser ? foundUser : null;
 
                     if (user) {
-                        redisClient.set(username, JSON.stringify(user));
+                        redisClient.set(user.username, JSON.stringify(user));
                         redisClient.set(user.id, JSON.stringify(user));
                     }
 
                     return user;
+                }).catch((err) => {
+                    return Promise.reject("A database error occured");
                 });
-            })
-        }
+            });
+        };
 
         /**
          * Update a user
          */
         exports.updateUser = (id, username, password, bio) => {
             return exports.getUserByID(id).then((oldUser) => {
-                let updateSet = {};
-
                 if (!oldUser) {
                     return Promise.reject("Invalid user ID");
                 }
@@ -144,19 +143,15 @@ rethink.connect(settings.rethink).then((db) => {
                     }
 
                     if (password) {
-                        let salt = bcrypt.genSaltSync();
+                        const salt = bcrypt.genSaltSync();
                         password = bcrypt.hashSync(password, salt);
                     } else {
                         password = oldUser.password;
                     }
 
-                    if (bio && (bio = bio.trim())) {
-                        bio = xss(bio);
-                    } else {
-                        bio = oldUser.bio;
-                    }
+                    bio = bio ? xss(bio.trim()) : oldUser.bio;
 
-                    let updateSet = {
+                    const updateSet = {
                         id: id,
                         username: username,
                         password: password,
@@ -170,10 +165,12 @@ rethink.connect(settings.rethink).then((db) => {
                         return (username == oldUser.username) ? 1 : redisClient.del(oldUser.username);
                     }).then(() => {
                         return redisClient.set(username, JSON.stringify(updateSet));
+                    }).catch((err) => {
+                        return Promise.reject("A database error occured");
                     });
                 });
-            })
-        }
+            });
+        };
 
         /**
          * Log a user out
@@ -182,9 +179,11 @@ rethink.connect(settings.rethink).then((db) => {
             return exports.getUserByUsername(username).then((user) => {
                 redisClient.del(username);
                 redisClient.del(user.id);
-                return userCollection.filter({ username: username }).update({ sessionID: null }).run(db);
+                return userCollection.filter({ username: username }).update({ sessionID: null }).run(db).catch((err) => {
+                    return Promise.reject("A database error occured");
+                });
             });
-        }
+        };
 
         /**
          * Delete a user
@@ -193,7 +192,9 @@ rethink.connect(settings.rethink).then((db) => {
             return exports.getUserByUsername(username).then((user) => {
                 redisClient.del(username);
                 redisClient.del(user.id);
-                return userCollection.filter({ username: username }).delete().run(db);
+                return userCollection.filter({ username: username }).delete().run(db).catch((err) => {
+                    return Promise.reject("A database error occured");
+                });
             });
-        }
+        };
     });
