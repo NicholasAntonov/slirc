@@ -1,13 +1,40 @@
-main {
-    width: 60%;
+
+.dashboardRoot {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    flex: 1 0 auto;
+    width: 100vw;
+    display: flex;
+    justify-content: space-between;
+
+}
+
+h1 {
     display: inline-block;
-    background-color: #111;
+}
+
+aside {
+    flex: 1 0 0;
+}
+
+main {
+    flex: 5 0 0;
     margin-left: 6px;
     min-width: 250px;
 }
 
 h1 {
     padding-top: 20px;
+}
+
+.dashContent {
+    display: flex;
+    flex: 4 1 100%;
+    align-items: stretch;
 }
 
 .logoutButton {

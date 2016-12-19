@@ -28,16 +28,19 @@ class Dashboard extends Component {
 
   render() {
     return (
-      <div>
-        <h1>Welcome, {this.props.user}</h1>
-        <p> Select the channel you would like to talk in, send a message, or logout </p>
-        <div className={styles.logoutButton}>
+        <div className={styles.dashboardRoot}>
+        <header>
+          <h1>Welcome, {this.props.user}</h1>
           <button  onClick={(e) => this.logout(e)}>Logout</button>
+        </header>
+        <div className={styles.dashContent}>
+          <aside>
+            <Channellist />
+          </aside>
+          <main>
+            <Chat/>
+          </main>
         </div>
-        <aside>
-          <Channellist />
-        </aside>
-        <main><Chat/></main>
       </div>
     );
   }

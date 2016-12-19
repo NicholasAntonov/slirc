@@ -25,22 +25,20 @@ class Chat extends Component {
 
   render() {
     return (
-      <div>
-        <h1>Message List</h1>
-        <form onSubmit={this.handleSubmit} className={styles.messageText}>
+        <div className={styles.chatRoot}>
           <div className={styles.messageHistory}>
             <ul>
               <li>
-                <strong>Username: </strong> 
-				        <span>Sample Message</span>
+                <strong>Username: </strong>
+                <span>Sample Message</span>
               </li>
             </ul>
           </div>
-					<input />
-          <button type="submit" className={styles.sendButton}>Send</button>
-				</form>
-
-      </div>
+          <form onSubmit={this.handleSubmit} className={styles.messageText}>
+            <input />
+            <button type="submit" className={styles.sendButton}>Send</button>
+          </form>
+        </div>
     );
   }
 }
