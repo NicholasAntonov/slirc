@@ -1,5 +1,4 @@
 const userRoutes = require("./users");
-const path = require("path");
 
 const constructorMethod = (app) => {
     app.use("/user", userRoutes);

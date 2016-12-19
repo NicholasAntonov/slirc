@@ -19,10 +19,9 @@ rethink.connect(settings.rethink).then((db) => {
             }
 
             username = xss(username.trim());
-            password = password;
             bio = !bio || !bio.trim() ? null : xss(bio.trim());
 
-            if (!username || !password) {
+            if (!username) {
                 return Promise.reject("Invalid parameters");
             }
 
@@ -38,15 +37,15 @@ rethink.connect(settings.rethink).then((db) => {
                     password: bcrypt.hashSync(password, salt),
                     bio: bio,
                     sessionID: null
-                }
+                };
 
                 return userCollection.insert(userObject).run(db).then((res) => {
                     return res;
                 }).catch((err) => {
                     return Promise.reject("A database error occured");
                 });
-            })
-        }
+            });
+        };
 
         /**
          * Authenticate a user
@@ -73,7 +72,7 @@ rethink.connect(settings.rethink).then((db) => {
                     return Promise.reject("Invalid username or password");
                 }
             });
-        }
+        };
 
         /**
          * Get a user by username
@@ -98,8 +97,8 @@ rethink.connect(settings.rethink).then((db) => {
                 }).catch((err) => {
                     return Promise.reject("A database error occured");
                 });
-            })
-        }
+            });
+        };
 
         /**
          * Get a user by ID
@@ -114,7 +113,7 @@ rethink.connect(settings.rethink).then((db) => {
                     user = foundUser ? foundUser : null;
 
                     if (user) {
-                        redisClient.set(username, JSON.stringify(user));
+                        redisClient.set(user.username, JSON.stringify(user));
                         redisClient.set(user.id, JSON.stringify(user));
                     }
 
@@ -123,15 +122,13 @@ rethink.connect(settings.rethink).then((db) => {
                     return Promise.reject("A database error occured");
                 });
             });
-        }
+        };
 
         /**
          * Update a user
          */
         exports.updateUser = (id, username, password, bio) => {
             return exports.getUserByID(id).then((oldUser) => {
-                let updateSet = {};
-
                 if (!oldUser) {
                     return Promise.reject("Invalid user ID");
                 }
@@ -152,11 +149,7 @@ rethink.connect(settings.rethink).then((db) => {
                         password = oldUser.password;
                     }
 
-                    if (bio && (bio = bio.trim())) {
-                        bio = xss(bio);
-                    } else {
-                        bio = oldUser.bio;
-                    }
+                    bio = bio ? xss(bio.trim()) : oldUser.bio;
 
                     const updateSet = {
                         id: id,
@@ -176,8 +169,8 @@ rethink.connect(settings.rethink).then((db) => {
                         return Promise.reject("A database error occured");
                     });
                 });
-            })
-        }
+            });
+        };
 
         /**
          * Log a user out
@@ -190,7 +183,7 @@ rethink.connect(settings.rethink).then((db) => {
                     return Promise.reject("A database error occured");
                 });
             });
-        }
+        };
 
         /**
          * Delete a user
@@ -203,5 +196,5 @@ rethink.connect(settings.rethink).then((db) => {
                     return Promise.reject("A database error occured");
                 });
             });
-        }
+        };
     });

@@ -4,8 +4,8 @@ const settings = require('../config.js');
 const userData = require('../data/users.js');
 
 exports.verifyToken = (req) => {
-    let token = req.get('Auth-Token');
     let decoded = undefined;
+    const token = req.get('Auth-Token');
 
     try {
         decoded = jwt.verify(token, settings.serverConfig.sessionSecret);
@@ -14,7 +14,7 @@ exports.verifyToken = (req) => {
     }
 
     return decoded.sub;
-}
+};
 
 exports.verifyRequest = () => {
     return (req, res, next) => {
@@ -35,5 +35,5 @@ exports.verifyRequest = () => {
                 res.status(401).send({ success: false, message: "Unauthorized" });
             });
         }
-    }
+    };
 };

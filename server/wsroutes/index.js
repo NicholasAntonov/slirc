@@ -1,9 +1,5 @@
-const path = require("path");
-
-const auth = require("../routes/auth");
 const socketioJwt = require('socketio-jwt');
 const settings = require('../config.js');
-
 const xss = require("xss");
 
 const constructorMethod = (io) => {
@@ -55,7 +51,7 @@ const constructorMethod = (io) => {
             io.to(channelName).emit('user-leave', username);
             socket.leave(channelName);
             /* update list of channel users */
-            channelUsers[channelName].delete(username)
+            channelUsers[channelName].delete(username);
             userChannels[username].delete(channelName);
             console.log(`${username} has left channel ${channelName}`);
         });
@@ -101,7 +97,7 @@ const constructorMethod = (io) => {
             io.to(userSocketMap[username]).emit('your-channels', {
                 channels: userChannels[username]
             });
-        })
+        });
 
         /* configuration for client connect/disconnect */
 
