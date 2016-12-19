@@ -21,12 +21,10 @@ router.post("/login", (req, res) => {
     let username = req.body.username;
     const password = req.body.password;
 
-    if (!username || !password) {
+    if (!username || !password || !(username = username.trim())) {
         res.json({ success: false, message: "Invalid parameters" });
         return;
     }
-
-    username = username.trim();
 
     userData.getUserByUsername(username).then((user) => {
         if (!user) {

@@ -18,8 +18,8 @@ exports.verifyToken = (req) => {
 
 exports.verifyRequest = () => {
     return (req, res, next) => {
-        let token = req.get('Auth-Token');
-        let username = exports.verifyToken(req);
+        const token = req.get('Auth-Token');
+        const username = exports.verifyToken(req);
     
         if (username === false) {
             res.status(401).send({ success: false, message: "Unauthorized" });
