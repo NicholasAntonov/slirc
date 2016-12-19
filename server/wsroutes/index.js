@@ -17,6 +17,7 @@ const constructorMethod = (io) => {
     const join_channel = (socket, channelName) => {
         io.to(channelName).emit('action', {
             type: 'user-join',
+            channel: channelName,
             username: username
         });
         socket.join(channelName);
@@ -34,6 +35,7 @@ const constructorMethod = (io) => {
     const leave_channel = (socket, channelName) => {
         io.to(channelName).emit('action', {
             type: 'user-leave',
+            channel: channelName,
             username: username
         });
         socket.leave(channelName);
@@ -46,6 +48,7 @@ const constructorMethod = (io) => {
     const send_msg = (msg) => {
         io.to(msg.channelName).emit('action', {
             type: 'new-msg',
+            channel: msg.channelName,
             from: username,
             text: xss(msg.text),
             ts: new Date().valueOf()
