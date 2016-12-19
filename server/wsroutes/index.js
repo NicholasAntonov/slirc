@@ -9,6 +9,74 @@ const constructorMethod = (io) => {
     const userSocketMap = {};
     const channelUsers = {};
     const userChannels = {};
+    
+    /* supported user commands */
+    
+    const join_channel = (channelName) => {
+        io.to(channelName).emit('user-join', username);
+        socket.join(channelName);
+        if (channelUsers[channelName] === undefined) {
+            channelUsers[channelName] = new Set();
+        }
+        if (userChannels[username] === undefined) {
+            userChannels[username] = new Set();
+        }
+        channelUsers[channelName].add(username);
+        userChannels[username].add(channelName);
+        console.log(`${username} has joined channel ${channelName}`);
+    }
+    
+    const leave_channel = (channelName) => {
+        io.to(channelName).emit('user-leave', username);
+        socket.leave(channelName);
+        /* update list of channel users */
+        channelUsers[channelName].delete(username);
+        userChannels[username].delete(channelName);
+        console.log(`${username} has left channel ${channelName}`);
+    }
+
+    const send_msg = (msg) => {
+        io.to(msg.channelName).emit('new-msg', {
+            from: username,
+            text: xss(msg.text),
+            ts: new Date().valueOf()
+        });
+    }
+
+    const private_msg = (msg) => {
+        if (userSocketMap[msg.to] !== undefined) {
+            userSocketMap[msg.to].emit('pm', {
+                from: username,
+                text: xss(msg.text),
+                ts: new Date().valueOf()
+            });
+        } else {
+            userSocketMap[username].emit('err', {
+                error: 'No such user currently online'
+            });
+        }
+    }
+
+    /* used by portions of frontend */
+    
+    const user_list = (channelName) => {
+        io.to(userSocketMap[username]).emit('channel-users', {
+            channel: channelName,
+            users: Array.from(channelUsers[channelName])
+        });
+    }
+    
+    const channel_list = () => {
+        io.to(userSocketMap[username]).emit('channels', {
+            channels: Object.keys(channelUsers)
+        });
+    }
+    
+    const joined_channels = () => {
+        io.to(userSocketMap[username]).emit('your-channels', {
+            channels: userChannels[username]
+        });
+    }    
 
     /* client should do something like:
         var socket = io.connect('http://localhost:3000/chatns', {
@@ -31,72 +99,26 @@ const constructorMethod = (io) => {
 
         console.log(`${username} has authenticated.`);
 
-        /* supported user commands */
-
-        socket.on('join-channel', (channelName) => {
-            io.to(channelName).emit('user-join', username);
-            socket.join(channelName);
-            if (channelUsers[channelName] === undefined) {
-                channelUsers[channelName] = new Set();
-            }
-            if (userChannels[username] === undefined) {
-                userChannels[username] = new Set();
-            }
-            channelUsers[channelName].add(username);
-            userChannels[username].add(channelName);
-            console.log(`${username} has joined channel ${channelName}`);
-        });
-
-        socket.on('leave-channel', (channelName) => {
-            io.to(channelName).emit('user-leave', username);
-            socket.leave(channelName);
-            /* update list of channel users */
-            channelUsers[channelName].delete(username);
-            userChannels[username].delete(channelName);
-            console.log(`${username} has left channel ${channelName}`);
-        });
-
-        socket.on('send-msg', (msg) => {
-            io.to(msg.channelName).emit('new-msg', {
-                from: username,
-                text: xss(msg.text),
-                ts: new Date().valueOf()
-            });
-        });
-
-        socket.on('private-msg', (msg) => {
-            if (userSocketMap[msg.to] !== undefined) {
-                userSocketMap[msg.to].emit('pm', {
-                    from: username,
-                    text: xss(msg.text),
-                    ts: new Date().valueOf()
-                });
+        socket.on('action', (action) => {
+            let type = action.type;
+            
+            if (type === 'join-channel') {
+                join_channel(action.data.channelName);
+            } else if (type === 'leave-channel') {
+                leave_channel(action.data.channelName);
+            } else if (type === 'send-msg') {
+                send_msg(action.data.msg);
+            } else if (type === 'private-msg') {
+                private_msg(action.data.msg);
+            } else if (type === 'user-list') {
+                user_list(action.data.channelName);
+            } else if (type === 'channel-list') {
+                channel_list();
+            } else if (type === 'joined-channels') {
+                joined_channels();
             } else {
-                userSocketMap[username].emit('err', {
-                    error: 'No such user currently online'
-                });
+                socket.emit('err', {'err' : 'invalid command'});
             }
-        });
-
-        /* used by portions of frontend */
-
-        socket.on('user-list', (channelName) => {
-            io.to(userSocketMap[username]).emit('channel-users', {
-                channel: channelName,
-                users: Array.from(channelUsers[channelName])
-            });
-        });
-
-        socket.on('channel-list', () => {
-            io.to(userSocketMap[username]).emit('channels', {
-                channels: Object.keys(channelUsers)
-            });
-        });
-
-        socket.on('joined-channels', () => {
-            io.to(userSocketMap[username]).emit('your-channels', {
-                channels: userChannels[username]
-            });
         });
 
         /* configuration for client connect/disconnect */
