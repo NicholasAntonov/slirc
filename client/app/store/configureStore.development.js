@@ -2,11 +2,15 @@ import { createStore, applyMiddleware, compose } from 'redux';
 import thunk from 'redux-thunk';
 import { hashHistory } from 'react-router';
 import { routerMiddleware, push } from 'react-router-redux';
-import createSocketIoMiddleware from 'redux-socket.io';
 import createLogger from 'redux-logger';
 import rootReducer from '../reducers';
 
+import createSocketIoMiddleware from 'redux-socket.io';
+import io from 'socket.io-client';
+
 import * as authActions from '../actions/auth';
+
+let store;
 
 const actionCreators = {
   ...authActions,
@@ -29,12 +33,27 @@ const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ?
   }) :
   compose;
 /* eslint-enable no-underscore-dangle */
+
+const socket = io.connect('http://localhost:4000/chatns');
+const socketIoMiddleware = createSocketIoMiddleware(socket, '', {execute: socketExecutor});
+
 const enhancer = composeEnhancers(
-  applyMiddleware(thunk, router, logger)
+  applyMiddleware(thunk, socketIoMiddleware, router, logger)
 );
 
+function socketExecutor (action, emit, next, dispatch) {
+  console.log('executing');
+  emit('authenticate', {token: store.getState().auth.token})
+    .on('authenticated', function () {
+      console.log('authed');
+      emit('action', action);
+    });
+  next(action);
+}
+
 export default function configureStore(initialState: Object) {
-  const store = createStore(rootReducer, initialState, enhancer);
+
+  store = createStore(rootReducer, initialState, enhancer);
 
   if (module.hot) {
     module.hot.accept('../reducers', () =>

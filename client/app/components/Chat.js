@@ -3,16 +3,22 @@ import React, { Component } from 'react';
 import { Link } from 'react-router';
 import styles from './Chat.css';
 
+const ENTER_KEY = 13;
 
 
 class Chat extends Component {
- constructor(props) {
+  constructor(props) {
     super(props);
+    this.onPress = this.onPress.bind(this);
     // this.props.protectedTest({user: this.props.user, token: this.props.token});
   }
 
-  handleFormSubmit() {
-    //Handle the message sending
+  onPress(event) {
+    if (event.keyCode === ENTER_KEY) {
+      console.log(this.props);
+      this.props.functions.sendMessage('general', this.input.value);
+      console.log(this.input.value);
+    }
   }
 
   renderContent() {
@@ -34,10 +40,7 @@ class Chat extends Component {
               </li>
             </ul>
           </div>
-          <form onSubmit={this.handleSubmit} className={styles.messageText}>
-            <input />
-            <button type="submit" className={styles.sendButton}>Send</button>
-          </form>
+        <input onKeyDown={this.onPress} ref={(input) => this.input = input}/>
         </div>
     );
   }

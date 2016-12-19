@@ -38,7 +38,7 @@ class Dashboard extends Component {
             <Channellist />
           </aside>
           <main>
-            <Chat/>
+        <Chat functions={this.props}/>
           </main>
         </div>
       </div>

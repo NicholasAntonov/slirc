@@ -53,6 +53,7 @@ const constructorMethod = (io) => {
             text: xss(msg.text),
             ts: new Date().valueOf()
         });
+        console.log('sending message', username, msg.text);
     };
 
     const private_msg = (msg) => {
@@ -115,12 +116,14 @@ const constructorMethod = (io) => {
     })).on('authenticated', (socket) => {
 
         username = xss(socket.decoded_token.sub);
+        console.log('authed');
 
         // console.log(`${username} has authenticated.`);
         
         socket.on('action', (action) => {
             let type = action.type;
             
+            console.log(action);
             if (type === 'join-channel') {
                 join_channel(socket, action.data.channelName);
             } else if (type === 'leave-channel') {
