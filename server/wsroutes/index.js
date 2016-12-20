@@ -91,7 +91,7 @@ const constructorMethod = (io) => {
     /* used by portions of frontend */
     
     const user_list = (username, channelName) => {
-        io.to(userSocketMap[username]).emit('action', {
+        io.sockets.emit('action', {
             type: 'channel-users',
             channel: channelName,
             users: Array.from(channelUsers[channelName])
@@ -99,7 +99,7 @@ const constructorMethod = (io) => {
     };
 
     const channel_list = (username) => {
-        io.to(userSocketMap[username]).emit('action', {
+        io.sockets.emit('action', {
             type: 'channel-list',
             channels: Object.keys(channelUsers)
         });
@@ -108,7 +108,8 @@ const constructorMethod = (io) => {
     const joined_channels = (username) => {
         io.to(userSocketMap[username]).emit('action', {
             type: 'joined-channels',
-            channels: userChannels[username]
+            channels: userChannels[username],
+            username: username
         });
     };
 
