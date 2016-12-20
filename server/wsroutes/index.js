@@ -25,6 +25,7 @@ const constructorMethod = (io) => {
     const chatns = io.of('/chatns');
 
     const userSocketMap = {};
+    const socketUserMap = {};
     const channelUsers = {};
     const userChannels = {};
 
@@ -125,6 +126,9 @@ const constructorMethod = (io) => {
             } else {
                 let type = action.type;
                 let channelName = action.channelName;
+
+                userSocketMap[username] = socket;
+                socketUserMap[socket.id] = username;
                 
                 if (!channelName && action.msg) {
                     channelName = action.msg.channelName;
@@ -157,17 +161,24 @@ const constructorMethod = (io) => {
 
         socket.on('init', () => {
             console.log('init');
-            userSocketMap[username] = socket;
+            // userSocketMap[username] = socket;
             // console.log(`Created user:socket mapping for ${username}`);
         });
 
         socket.on('disconnect', () => {
-            userSocketMap[username] = undefined;
-            userChannels[username].forEach( (chan) => {
-                channelUsers[chan].delete(username);
-            });
-            // userChannels[username].clear();
-            userChannels[username] = undefined;
+            let username = socketUserMap[socket.id];
+
+            if (username) {
+                userSocketMap[username] = undefined;
+                if (userChannels[username]) {
+                    userChannels[username].forEach( (chan) => {
+                        channelUsers[chan].delete(username);
+                    });
+                } 
+                userChannels[username] = undefined;
+            }
+            
+            socketUserMap[socket.id] = undefined;
             // console.log(`${username} has disconnected`);
         });
 
