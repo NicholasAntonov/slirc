@@ -1,0 +1,50 @@
+
+.dashboardRoot {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    flex: 1 0 auto;
+    width: 100vw;
+    display: flex;
+    justify-content: space-between;
+
+}
+
+h1 {
+    display: inline-block;
+}
+
+aside {
+    flex: 1 0 0;
+}
+
+main {
+    flex: 5 0 0;
+    margin-left: 6px;
+    min-width: 250px;
+}
+
+h1 {
+    padding-top: 20px;
+}
+
+.dashContent {
+    display: flex;
+    flex: 4 1 100%;
+    align-items: stretch;
+}
+
+.logoutButton {
+    display:block;
+    margin-bottom:6px;
+}
+
+@media only screen and (max-width: 640px) {
+    main {
+        margin-left: 0px;
+        margin-top: 6px;
+    }
+}

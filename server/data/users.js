@@ -1,16 +1,14 @@
-var MongoClient = require('mongodb').MongoClient,
-    settings = require('../config.js'),
-    uuid = require('uuid'),
-    redis = require('promise-redis')(),
-    redisClient = redis.createClient(),
-    bcrypt = require("bcrypt-nodejs"),
-    xss = require("xss");
-
-var fullMongoUrl = settings.mongoConfig.serverUrl + settings.mongoConfig.database;
+const rethink = require('rethinkdb');
+const settings = require('../config.js');
+const uuid = require('uuid');
+const redis = require('promise-redis')();
+const redisClient = redis.createClient();
+const bcrypt = require("bcrypt-nodejs");
+const xss = require("xss");
 var exports = module.exports = {};
 
-MongoClient.connect(fullMongoUrl).then(function(db) {
-        var userCollection = db.collection("users");
+rethink.connect(settings.rethink).then((db) => {
+        var userCollection = rethink.table("users");
 
         /**
          * Create a user
@@ -21,10 +19,9 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
             }
 
             username = xss(username.trim());
-            password = password.trim();
             bio = !bio || !bio.trim() ? null : xss(bio.trim());
 
-            if (!username || !password) {
+            if (!username) {
                 return Promise.reject("Invalid parameters");
             }
 
@@ -33,20 +30,22 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                     return Promise.reject("User already exists");
                 }
 
-                let salt = bcrypt.genSaltSync();
-                let userObject = {
-                    _id: uuid.v4(),
+                const salt = bcrypt.genSaltSync();
+                const userObject = {
+                    id: uuid.v4(),
                     username: username,
                     password: bcrypt.hashSync(password, salt),
                     bio: bio,
                     sessionID: null
-                }
+                };
 
-                return userCollection.insertOne(userObject).then((res) => {
+                return userCollection.insert(userObject).run(db).then((res) => {
                     return res;
+                }).catch((err) => {
+                    return Promise.reject("A database error occured");
                 });
-            })
-        }
+            });
+        };
 
         /**
          * Authenticate a user
@@ -58,12 +57,12 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
 
             return exports.getUserByUsername(username).then((foundUser) => {
                 if (foundUser && bcrypt.compareSync(password, foundUser.password)) {
-                    let user = foundUser;
+                    var user = foundUser;
 
-                    return userCollection.update({ username: username }, { $set: { sessionID: token }}).then(() => {
+                    return userCollection.filter({ username: username }).update({ sessionID: token }).run(db).then(() => {
                         user.sessionID = token;
-        
-                        return redisClient.set(user._id, JSON.stringify(user)).then(() => {
+
+                        return redisClient.set(user.id, JSON.stringify(user)).then(() => {
                             return redisClient.set(user.username, JSON.stringify(user));
                         }).then(() => {
                             return token;
@@ -73,7 +72,7 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                     return Promise.reject("Invalid username or password");
                 }
             });
-        }
+        };
 
         /**
          * Get a user by username
@@ -84,18 +83,22 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                     return JSON.parse(user);
                 }
 
-                return userCollection.findOne({ username: username }).then((foundUser) => {
-                    user = foundUser ? foundUser : null;
+                return userCollection.filter({ username: username }).limit(1).run(db).then((foundUser) => {
+                    return foundUser.toArray();
+                }).then((foundUser) => {
+                    user = foundUser[0] ? foundUser[0] : null;
 
                     if (user) {
                         redisClient.set(username, JSON.stringify(user));
-                        redisClient.set(user._id, JSON.stringify(user));
+                        redisClient.set(user.id, JSON.stringify(user));
                     }
 
                     return user;
+                }).catch((err) => {
+                    return Promise.reject("A database error occured");
                 });
-            })
-        }
+            });
+        };
 
         /**
          * Get a user by ID
@@ -106,26 +109,26 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                     return JSON.parse(user);
                 }
 
-                return userCollection.findOne({ _id: id }).then((foundUser) => {
+                return userCollection.get(id).then((foundUser) => {
                     user = foundUser ? foundUser : null;
 
                     if (user) {
-                        redisClient.set(username, JSON.stringify(user));
-                        redisClient.set(user._id, JSON.stringify(user));
+                        redisClient.set(user.username, JSON.stringify(user));
+                        redisClient.set(user.id, JSON.stringify(user));
                     }
 
                     return user;
+                }).catch((err) => {
+                    return Promise.reject("A database error occured");
                 });
-            })
-        }
+            });
+        };
 
         /**
          * Update a user
          */
         exports.updateUser = (id, username, password, bio) => {
             return exports.getUserByID(id).then((oldUser) => {
-                let updateSet = {};
-
                 if (!oldUser) {
                     return Promise.reject("Invalid user ID");
                 }
@@ -139,37 +142,35 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
                         username = username ? username : oldUser.username;
                     }
 
-                    if (password && (password = password.trim())) {
-                        let salt = bcrypt.genSaltSync();
+                    if (password) {
+                        const salt = bcrypt.genSaltSync();
                         password = bcrypt.hashSync(password, salt);
                     } else {
                         password = oldUser.password;
                     }
 
-                    if (bio && (bio = bio.trim())) {
-                        bio = xss(bio);
-                    } else {
-                        bio = oldUser.bio;
-                    }
+                    bio = bio ? xss(bio.trim()) : oldUser.bio;
 
-                    let updateSet = {
-                        _id: id,
+                    const updateSet = {
+                        id: id,
                         username: username,
                         password: password,
                         bio: bio,
                         sessionID: null
                     };
 
-                    return userCollection.update({ _id: id }, updateSet).then(() => {
+                    return userCollection.get(id).update(updateSet).run(db).then(() => {
                         return redisClient.set(id, JSON.stringify(updateSet));
                     }).then(() => {
                         return (username == oldUser.username) ? 1 : redisClient.del(oldUser.username);
                     }).then(() => {
                         return redisClient.set(username, JSON.stringify(updateSet));
+                    }).catch((err) => {
+                        return Promise.reject("A database error occured");
                     });
                 });
-            })
-        }
+            });
+        };
 
         /**
          * Log a user out
@@ -177,10 +178,12 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
         exports.logout = (username) => {
             return exports.getUserByUsername(username).then((user) => {
                 redisClient.del(username);
-                redisClient.del(user._id);
-                return userCollection.update({ username: username }, { $set: { sessionID: null }});
+                redisClient.del(user.id);
+                return userCollection.filter({ username: username }).update({ sessionID: null }).run(db).catch((err) => {
+                    return Promise.reject("A database error occured");
+                });
             });
-        }
+        };
 
         /**
          * Delete a user
@@ -188,8 +191,10 @@ MongoClient.connect(fullMongoUrl).then(function(db) {
         exports.delete = (username) => {
             return exports.getUserByUsername(username).then((user) => {
                 redisClient.del(username);
-                redisClient.del(user._id);
-                return userCollection.deleteOne({ username: username });
+                redisClient.del(user.id);
+                return userCollection.filter({ username: username }).delete().run(db).catch((err) => {
+                    return Promise.reject("A database error occured");
+                });
             });
-        }
+        };
     });
