@@ -1,6 +1,23 @@
+const jwt = require('jsonwebtoken');
 const settings = require('../config.js');
 const xss = require('xss');
 const auth = require('../routes/auth.js');
+
+const verifyToken = (token) => {
+    let decoded = undefined;
+
+    if (!token) {
+        return undefined;
+    }
+
+    try {
+        decoded = jwt.verify(token, settings.serverConfig.sessionSecret);
+    } catch (e) {
+        return undefined;
+    }
+
+    return decoded.sub;
+}
 
 const constructorMethod = (io) => {
 
@@ -10,11 +27,10 @@ const constructorMethod = (io) => {
     const userSocketMap = {};
     const channelUsers = {};
     const userChannels = {};
-    let username = undefined;
 
     /* supported user commands */
 
-    const join_channel = (socket, channelName) => {
+    const join_channel = (socket, username, channelName) => {
         io.to(channelName).emit('action', {
             type: 'user-join',
             channel: channelName,
@@ -32,7 +48,7 @@ const constructorMethod = (io) => {
         // console.log(`${username} has joined channel ${channelName}`);
     };
 
-    const leave_channel = (socket, channelName) => {
+    const leave_channel = (socket, username, channelName) => {
         io.to(channelName).emit('action', {
             type: 'user-leave',
             channel: channelName,
@@ -45,7 +61,7 @@ const constructorMethod = (io) => {
         // console.log(`${username} has left channel ${channelName}`);
     };
 
-    const send_msg = (msg) => {
+    const send_msg = (username, msg) => {
         io.to(msg.channelName).emit('action', {
             type: 'new-msg',
             channel: msg.channelName,
@@ -56,7 +72,7 @@ const constructorMethod = (io) => {
         console.log('sending message', username, msg.text);
     };
 
-    const private_msg = (msg) => {
+    const private_msg = (username, msg) => {
         if (userSocketMap[msg.to] !== undefined) {
             userSocketMap[msg.to].emit('action', {
                 type: 'pm',
@@ -73,7 +89,7 @@ const constructorMethod = (io) => {
 
     /* used by portions of frontend */
     
-    const user_list = (channelName) => {
+    const user_list = (username, channelName) => {
         io.to(userSocketMap[username]).emit('action', {
             type: 'channel-users',
             channel: channelName,
@@ -81,14 +97,14 @@ const constructorMethod = (io) => {
         });
     };
 
-    const channel_list = () => {
+    const channel_list = (username) => {
         io.to(userSocketMap[username]).emit('action', {
             type: 'channel-list',
             channels: Object.keys(channelUsers)
         });
     };
 
-    const joined_channels = () => {
+    const joined_channels = (username) => {
         io.to(userSocketMap[username]).emit('action', {
             type: 'joined-channels',
             channels: userChannels[username]
@@ -99,34 +115,36 @@ const constructorMethod = (io) => {
     chatns.on('connection', (socket) => {
 
         console.log('connected');
+
         socket.on('action', (action) => {
-            username = auth.verifyToken(action.token);
+            let username = verifyToken(action.token);
+            
             if (!username) {
                 console.log('unauthorized');
                 socket.emit('unauthorized', {message: 'invalid token'});
-            }
-
-            console.log(`${username} has authenticated.`);
-
-            let type = action.type;
-
-            console.log(action);
-            if (type === 'join-channel') {
-                join_channel(socket, action.data.channelName);
-            } else if (type === 'leave-channel') {
-                leave_channel(socket, action.data.channelName);
-            } else if (type === 'send-msg') {
-                send_msg(action.data.msg);
-            } else if (type === 'private-msg') {
-                private_msg(action.data.msg);
-            } else if (type === 'user-list') {
-                user_list(action.data.channelName);
-            } else if (type === 'channel-list') {
-                channel_list();
-            } else if (type === 'joined-channels') {
-                joined_channels();
             } else {
-                socket.emit('err', {'err' : 'invalid command'});
+                let type = action.type;
+                
+                console.log(`${username} has authenticated.`);
+                console.log(action);
+
+                if (type === 'join-channel') {
+                    join_channel(socket, username, action.channelName);
+                } else if (type === 'leave-channel') {
+                    leave_channel(socket, username, action.channelName);
+                } else if (type === 'send-msg') {
+                    send_msg(username, action.msg);
+                } else if (type === 'private-msg') {
+                    private_msg(username, action.msg);
+                } else if (type === 'user-list') {
+                    user_list(username, action.channelName);
+                } else if (type === 'channel-list') {
+                    channel_list(username);
+                } else if (type === 'joined-channels') {
+                    joined_channels(username);
+                } else {
+                    socket.emit('err', {'err' : 'invalid command'});
+                }
             }
         });
 
