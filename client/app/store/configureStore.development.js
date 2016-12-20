@@ -34,11 +34,11 @@ const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ?
   compose;
 /* eslint-enable no-underscore-dangle */
 
-const socket = io.connect('http://localhost:4000/chatns');
+const socket = io('http://localhost:4000/chatns');
 console.log(socket);
-socket.on('connect', function () {
-  console.log('connect');
-});
+// socket.on('connect', function () {
+//   console.log('connect');
+// });
 const socketIoMiddleware = createSocketIoMiddleware(socket, '', {execute: socketExecutor});
 
 const enhancer = composeEnhancers(

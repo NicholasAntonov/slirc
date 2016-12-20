@@ -1,19 +1,19 @@
-const socketioJwt = require('socketio-jwt');
 const settings = require('../config.js');
 const xss = require('xss');
+const auth = require('../routes/auth.js');
 
 const constructorMethod = (io) => {
 
     // we'll use the '/chatns' namespace
     const chatns = io.of('/chatns');
-    
+
     const userSocketMap = {};
     const channelUsers = {};
     const userChannels = {};
     let username = undefined;
-    
+
     /* supported user commands */
-    
+
     const join_channel = (socket, channelName) => {
         io.to(channelName).emit('action', {
             type: 'user-join',
@@ -31,7 +31,7 @@ const constructorMethod = (io) => {
         userChannels[username].add(channelName);
         // console.log(`${username} has joined channel ${channelName}`);
     };
-    
+
     const leave_channel = (socket, channelName) => {
         io.to(channelName).emit('action', {
             type: 'user-leave',
@@ -80,49 +80,36 @@ const constructorMethod = (io) => {
             users: Array.from(channelUsers[channelName])
         });
     };
-    
+
     const channel_list = () => {
         io.to(userSocketMap[username]).emit('action', {
             type: 'channel-list',
             channels: Object.keys(channelUsers)
         });
     };
-    
+
     const joined_channels = () => {
         io.to(userSocketMap[username]).emit('action', {
             type: 'joined-channels',
             channels: userChannels[username]
         });
-    };   
-
-    /* client should do something like:
-        var socket = io.connect('http://localhost:3000/chatns', {
-            query: 'token=' + json_web_token,
-            transports: [ 'websocket' ],
-            'force new connection': true
-        });
-    */
-
-    // auth middleware
-    /* chatns.use(socketioJwt.authorize({
-        secret: settings.serverConfig.sessionSecret,
-        handshake: true
-    }));
-    */
+    };
 
     // on each new connection from a websocket client
-    chatns.on('connection', socketioJwt.authorize({
-        secret: settings.serverConfig.sessionSecret
-    })).on('authenticated', (socket) => {
+    chatns.on('connection', (socket) => {
 
-        username = xss(socket.decoded_token.sub);
-        console.log('authed');
-
-        // console.log(`${username} has authenticated.`);
-        
+        console.log('connected');
         socket.on('action', (action) => {
+            username = auth.verifyToken(action.token);
+            if (!username) {
+                console.log('unauthorized');
+                socket.emit('unauthorized', {message: 'invalid token'});
+            }
+
+            console.log(`${username} has authenticated.`);
+
             let type = action.type;
-            
+
             console.log(action);
             if (type === 'join-channel') {
                 join_channel(socket, action.data.channelName);
@@ -146,6 +133,7 @@ const constructorMethod = (io) => {
         /* configuration for client connect/disconnect */
 
         socket.on('init', () => {
+            console.log('init');
             userSocketMap[username] = socket;
             // console.log(`Created user:socket mapping for ${username}`);
         });
