@@ -32,7 +32,7 @@ const constructorMethod = (io) => {
     /* supported user commands */
 
     const join_channel = (socket, username, channelName) => {
-        io.sockets.emit('action', {
+        io.of('/chatns').emit('action', {
             type: 'user-join',
             channel: channelName,
             username: username
@@ -50,7 +50,7 @@ const constructorMethod = (io) => {
     };
 
     const leave_channel = (socket, username, channelName) => {
-        io.sockets.emit('action', {
+        io.of('/chatns').emit('action', {
             type: 'user-leave',
             channel: channelName,
             username: username
@@ -63,7 +63,7 @@ const constructorMethod = (io) => {
     };
 
     const send_msg = (username, msg) => {
-        io.sockets.emit('action', {
+        io.of('/chatns').emit('action', {
             type: 'new-msg',
             channel: msg.channelName,
             from: username,
@@ -91,7 +91,7 @@ const constructorMethod = (io) => {
     /* used by portions of frontend */
     
     const user_list = (username, channelName) => {
-        io.sockets.emit('action', {
+        io.of('/chatns').emit('action', {
             type: 'channel-users',
             channel: channelName,
             users: Array.from(channelUsers[channelName])
@@ -99,7 +99,7 @@ const constructorMethod = (io) => {
     };
 
     const channel_list = (username) => {
-        io.sockets.emit('action', {
+        io.of('/chatns').emit('action', {
             type: 'channel-list',
             channels: Object.keys(channelUsers)
         });
