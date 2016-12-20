@@ -32,7 +32,7 @@ const constructorMethod = (io) => {
     /* supported user commands */
 
     const join_channel = (socket, username, channelName) => {
-        io.to(channelName).emit('action', {
+        io.sockets.emit('action', {
             type: 'user-join',
             channel: channelName,
             username: username
@@ -50,7 +50,7 @@ const constructorMethod = (io) => {
     };
 
     const leave_channel = (socket, username, channelName) => {
-        io.to(channelName).emit('action', {
+        io.sockets.emit('action', {
             type: 'user-leave',
             channel: channelName,
             username: username
@@ -63,7 +63,7 @@ const constructorMethod = (io) => {
     };
 
     const send_msg = (username, msg) => {
-        io.to(msg.channelName).emit('action', {
+        io.sockets.emit('action', {
             type: 'new-msg',
             channel: msg.channelName,
             from: username,
