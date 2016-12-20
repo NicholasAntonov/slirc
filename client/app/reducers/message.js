@@ -29,7 +29,7 @@ export default function (state = INITIAL_STATE, action) {
             next.messages[action.channel] = [];
         }
 
-        next.messages[action.channel].push(action.text);
+        next.messages[action.channel].push(action);
         return next;
     }
     return state;

@@ -16,6 +16,7 @@ class Chat extends Component {
   onPress(event) {
     if (event.keyCode === ENTER_KEY) {
       this.props.state.sendMessage('general', this.input.value);
+      this.input.value = '';
     }
   }
 
@@ -32,12 +33,11 @@ class Chat extends Component {
     return (
         <div className={styles.chatRoot}>
           <div className={styles.messageHistory}>
-            <ul>
-              <li>
-                <strong>Username: </strong>
-                <span>Sample Message</span>
-              </li>
-            </ul>
+        {this.props.state.messages.messages.general ? this.props.state.messages.messages.general.map(message => (
+            <div>
+              <span>{message.from + ': '}</span>{message.text}
+            </div>
+        )) : <div></div>}
           </div>
         <input onKeyDown={this.onPress} ref={(input) => this.input = input}/>
         </div>

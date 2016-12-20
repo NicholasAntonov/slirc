@@ -34,9 +34,6 @@ class Dashboard extends Component {
           <button  onClick={(e) => this.logout(e)}>Logout</button>
         </header>
         <div className={styles.dashContent}>
-          <aside>
-            <Channellist />
-          </aside>
           <main>
         <Chat state={this.props}/>
           </main>
