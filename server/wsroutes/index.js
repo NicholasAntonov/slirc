@@ -118,7 +118,8 @@ const constructorMethod = (io) => {
 
         console.log('connected');
 
-        socket.emit('init-state', {
+        io.of('/chatns').emit('action', {
+            type: 'init-state',
             channelUsers: channelUsers,
             userChannels: userChannels
         });
