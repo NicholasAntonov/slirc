@@ -11,4 +11,5 @@ export const
     PRIVATE_MESSAGE = 'private-msg',
     USER_LIST = 'user-list',
     CHANNEL_LIST = 'channel-list',
+    NEW_MESSAGE = 'new-msg',
     JOINED_CANNELS = 'joined-channels';

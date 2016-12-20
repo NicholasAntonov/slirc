@@ -15,9 +15,7 @@ class Chat extends Component {
 
   onPress(event) {
     if (event.keyCode === ENTER_KEY) {
-      console.log(this.props);
-      this.props.functions.sendMessage('general', this.input.value);
-      console.log(this.input.value);
+      this.props.state.sendMessage('general', this.input.value);
     }
   }
 
@@ -30,6 +28,7 @@ class Chat extends Component {
   }
 
   render() {
+    console.log(this.props.state);
     return (
         <div className={styles.chatRoot}>
           <div className={styles.messageHistory}>

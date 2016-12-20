@@ -9,7 +9,8 @@ function mapStateToProps(state) {
   return {
     content: state.auth.content,
     token: state.auth.token,
-    user: state.auth.user
+    user: state.auth.user,
+    messages: state.messages
   };
 }
 
