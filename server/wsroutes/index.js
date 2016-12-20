@@ -117,6 +117,11 @@ const constructorMethod = (io) => {
 
         console.log('connected');
 
+        socket.emit('init-state', {
+            channelUsers: channelUsers,
+            userChannels: userChannels
+        });
+
         socket.on('action', (action) => {
             let username = verifyToken(action.token);
             
