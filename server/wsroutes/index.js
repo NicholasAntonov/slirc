@@ -124,20 +124,25 @@ const constructorMethod = (io) => {
                 socket.emit('unauthorized', {message: 'invalid token'});
             } else {
                 let type = action.type;
+                let channelName = action.channelName;
+                
+                if (!channelName && action.msg) {
+                    channelName = action.msg.channelName;
+                }
                 
                 console.log(`${username} has authenticated.`);
                 console.log(action);
 
                 if (type === 'join-channel') {
-                    join_channel(socket, username, action.channelName);
+                    join_channel(socket, username, channelName);
                 } else if (type === 'leave-channel') {
-                    leave_channel(socket, username, action.channelName);
+                    leave_channel(socket, username, channelName);
                 } else if (type === 'send-msg') {
                     send_msg(username, action.msg);
                 } else if (type === 'private-msg') {
                     private_msg(username, action.msg);
                 } else if (type === 'user-list') {
-                    user_list(username, action.channelName);
+                    user_list(username, channelName);
                 } else if (type === 'channel-list') {
                     channel_list(username);
                 } else if (type === 'joined-channels') {
