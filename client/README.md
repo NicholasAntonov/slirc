@@ -21,31 +21,15 @@
 * **Note: requires a node version >= 6 and an npm version >= 3.**
 * **If you have installation or compilation issues with this project, please see [our debugging guide](https://github.com/chentsulin/electron-react-boilerplate/issues/400)**
 
-First, clone the repo via git:
+First, install the dependencies using [yarn](https://yarnpkg.com/):
 
 ```bash
-git clone https://github.com/chentsulin/electron-react-boilerplate.git your-project-name
+$ yarn install
 ```
-
-And then install dependencies.
-**ProTip**: Install with [yarn](https://github.com/yarnpkg/yarn) for faster and safer installation
-
-```bash
-$ cd your-project-name && npm install
-```
-
-:bulb: *In order to remove boilerplate sample code, simply run `npm run cleanup`. After this is run, the initial sample boilerplate code will be removed in order for a clean project for starting custom dev*
 
 ## Run
 
-Run these two commands __simultaneously__ in different console tabs.
-
-```bash
-$ npm run hot-server
-$ npm run start-hot
-```
-
-or run two servers with one command
+Start the app with one command:
 
 ```bash
 $ npm run dev
@@ -147,13 +131,6 @@ $ npm run build
 $ npm start
 ```
 
-To run End-to-End Test
-
-```bash
-$ npm run build
-$ npm run test-e2e
-```
-
 #### Options
 
 See [electron-builder CLI Usage](https://github.com/electron-userland/electron-builder#cli-usage)
@@ -176,20 +153,6 @@ If you want to have native-like User Interface (OS X El Capitan and Windows 10),
 ## Dispatching redux actions from main process
 
 see discusses in [#118](https://github.com/chentsulin/electron-react-boilerplate/issues/118) and [#108](https://github.com/chentsulin/electron-react-boilerplate/issues/108)
-
-## How to keep the boilerplate updated
-
-If your application is a fork from this repo, you can add this repo to another git remote:
-
-```sh
-git remote add upstream https://github.com/chentsulin/electron-react-boilerplate.git
-```
-
-Then, use git to merge some latest commits:
-
-```sh
-git pull upstream master
-```
 
 ## Maintainers
 
